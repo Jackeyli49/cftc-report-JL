@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>CFTC Positioning Report</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--text:#16202a;--muted:#66727f;--border:#dfe5ea;--accent:#0b5cff;--green:#087f5b;--red:#c92a2a;--yellow:#fff7d6}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:1480px;margin:auto;padding:34px 28px 60px}.hero{display:flex;justify-content:space-between;gap:28px;align-items:end;margin-bottom:24px}.eyebrow{font-size:12px;font-weight:800;letter-spacing:.18em;color:var(--accent)}h1{font-size:40px;line-height:1.05;margin:9px 0 8px}h2,h3{margin:0}.hero p,.section-head p{color:var(--muted);margin:0}.date-box,.card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 5px 20px rgba(15,23,42,.035)}.date-box{padding:14px 16px;min-width:220px}label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:800;margin-bottom:6px}select{width:100%;font:inherit;font-weight:700;border:0;background:transparent;color:var(--text);outline:none}.date-box small{display:block;color:var(--muted);margin-top:4px}.toolbar{display:flex;justify-content:space-between;margin-bottom:18px}.segmented{display:flex;background:#e8edf2;border-radius:10px;padding:4px}.segmented button{border:0;background:transparent;padding:8px 16px;border-radius:7px;font-weight:700;color:var(--muted);cursor:pointer}.segmented button.active{background:#fff;color:var(--text);box-shadow:0 1px 4px rgba(15,23,42,.12)}.card{margin-bottom:18px;overflow:hidden}.section-head{padding:20px 22px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}.section-head h2{font-size:21px;margin-bottom:4px}.count{font-size:12px;color:var(--muted);background:#f1f4f7;border-radius:999px;padding:6px 10px}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:1180px}th{font-size:11px;text-transform:uppercase;letter-spacing:.055em;text-align:left;color:var(--muted);padding:12px 14px;background:#fafbfc;border-bottom:1px solid var(--border)}td{padding:13px 14px;border-bottom:1px solid #edf0f2;vertical-align:middle;font-size:13px}.category td{background:#f5f7f9;color:#46515c;font-weight:800;text-transform:uppercase;letter-spacing:.07em;font-size:11px;padding:8px 14px}.asset{font-weight:750}.positive{color:var(--green);font-weight:800}.negative{color:var(--red);font-weight:800}.metric{display:grid;grid-template-columns:auto auto;gap:1px 8px;align-items:baseline}.metric strong{font-variant-numeric:tabular-nums}.metric small{grid-column:1/3;color:var(--muted);font-variant-numeric:tabular-nums}.z{font-size:11px;color:#5e6b78;background:#eef2f5;border-radius:5px;padding:2px 5px}.z.extreme{color:#a61e4d;background:#fff0f6}.pill{display:inline-block;border-radius:999px;padding:5px 8px;font-size:11px;font-weight:800}.action{background:#edf2ff;color:#364fc7}.crowd{background:#fff0f6;color:#a61e4d}.divergence{background:var(--yellow)}.analysis-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.insight{padding:20px}.insight h3{margin-bottom:14px}.insight p{display:flex;justify-content:space-between;gap:12px;padding:10px 0;margin:0;border-top:1px solid #edf0f2}.insight span{color:var(--muted);text-align:right}.report-summary,.methodology{padding:22px}.report-summary h2{margin-bottom:8px}.report-summary p,.notes p{color:var(--muted);line-height:1.6}.notes{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 28px}footer{text-align:center;color:var(--muted);font-size:12px;margin-top:26px}.hidden{display:none}@media(max-width:800px){main{padding:22px 14px}.hero{display:block}.date-box{margin-top:18px}.toolbar{gap:12px;align-items:flex-start;flex-direction:column}.analysis-grid,.notes{grid-template-columns:1fr}h1{font-size:32px}}
+</style>
+</head>
+<body><main>
+<header class="hero"><div><span class="eyebrow">MARKET POSITIONING</span><h1>CFTC Positioning Report</h1><p>Weekly futures positioning, normalized z-scores and positioning signals.</p></div><div class="date-box"><label>Report date</label><select id="date"><option>Loading…</option></select><small id="status">Positions as of Tuesday</small></div></header>
+<nav class="toolbar"><div class="segmented" id="views"><button class="active" data-view="table">Table</button><button data-view="report">Report</button><button data-view="analysis">Analysis</button></div><div class="segmented" id="modes"><button data-mode="simple">Simple</button><button class="active" data-mode="professional">Professional</button></div></nav>
+<div id="report" class="card report-summary hidden"><h2>Weekly Summary</h2><p id="summaryText">The summary is generated from the selected official CFTC report.</p></div>
+<div id="tables"></div>
+<div id="analysis" class="analysis-grid hidden"></div>
+<section class="card methodology"><h3>Methodology</h3><div class="notes"><p><b>Z-score</b> = current value versus its 156-week mean and standard deviation, using open-interest-normalized positioning.</p><p><b>Weekly change</b> = week-on-week contract change; the value in brackets is the z-score of that change.</p><p><b>Net position</b> = long minus short. The automated package does not include prices; connect a separate price source to populate the Price column.</p><p><b>Crowding</b> is flagged when any net, long or short z-score reaches 2.0; values at or above 2.75 are considered extreme.</p></div></section>
+<footer>Independent dashboard built from public CFTC positioning data. Not investment advice.</footer>
+</main><script>
+let professional=true;
+let payload=null;
+let data={leveraged:[],managed:[]};
+const nf=new Intl.NumberFormat('en-US');
+const signed=n=>(n>0?'+':'')+nf.format(Math.round(n||0));
+const pct=n=>n==null?'—':(n>0?'+':'')+Number(n).toFixed(1)+'%';
+const safe=n=>Number.isFinite(Number(n))?Number(n):0;
+
+function metric(v,z,c,cz){
+  return `<div class="metric"><strong>${nf.format(Math.round(safe(v)))}</strong>${professional?`<span class="z ${Math.abs(safe(z))>=2?'extreme':''}">z ${safe(z).toFixed(1)}</span>`:''}<small>${signed(c)} ${professional?`(${safe(cz)>0?'+':''}${safe(cz).toFixed(1)}z)`:''}</small></div>`
+}
+function table(title,subtitle,rows){
+  let last='';let body='';
+  rows.forEach(r=>{
+    if(r.category!==last){last=r.category;body+=`<tr class="category"><td colspan="7">${r.category}</td></tr>`}
+    body+=`<tr><td class="asset">${r.asset}</td><td class="${safe(r.priceChange)>=0?'positive':'negative'}">${pct(r.priceChange)}</td><td>${metric(r.net,r.netZ,r.netChange,r.netChangeZ)}</td><td>${metric(r.long,r.longZ,r.longChange,r.longChangeZ)}</td><td>${metric(r.short,r.shortZ,r.shortChange,r.shortChangeZ)}</td><td>${r.action?`<span class="pill action">${r.action}</span>`:''}</td><td>${r.crowding?`<span class="pill crowd">${r.crowding}</span>`:''}</td></tr>`
+  });
+  if(!rows.length) body='<tr><td colspan="7">No tracked markets were available for this report.</td></tr>';
+  return `<section class="card"><div class="section-head"><div><h2>${title}</h2><p>${subtitle}</p></div><span class="count">${rows.length} markets</span></div><div class="table-wrap"><table><thead><tr><th>Asset</th><th>Price*</th><th>Net Position</th><th>Long</th><th>Short</th><th>Positioning Action</th><th>Crowding</th></tr></thead><tbody>${body}</tbody></table></div></section>`
+}
+function render(){
+  tables.innerHTML=table('Leveraged Funds','Traders in Financial Futures (TFF) — leveraged institutional positioning',data.leveraged)+table('Managed Money','Disaggregated COT — CTA and commodity-fund positioning',data.managed);
+  const all=[...data.leveraged,...data.managed];
+  const crowded=all.filter(x=>x.crowding);
+  const largest=[...all].sort((a,b)=>Math.abs(safe(b.netChangeZ))-Math.abs(safe(a.netChangeZ))).slice(0,5);
+  analysis.innerHTML=`<section class="card insight"><h3>Crowded Positions</h3>${crowded.length?crowded.map(x=>`<p><b>${x.asset}</b><span>${x.crowding} · net z ${safe(x.netZ).toFixed(1)}</span></p>`).join(''):'<p>No 2.0z crowding signals.</p>'}</section><section class="card insight"><h3>Largest Weekly Shifts</h3>${largest.map(x=>`<p><b>${x.asset}</b><span>${signed(x.netChange)} contracts · ${safe(x.netChangeZ).toFixed(1)}z</span></p>`).join('')}</section><section class="card insight"><h3>Data Status</h3><p><b>Report date</b><span>${date.value}</span></p><p><b>Generated</b><span>${payload?.generatedAt?new Date(payload.generatedAt).toLocaleString():'—'}</span></p><p><b>Price feed</b><span>Not connected</span></p></section>`;
+  const netLong=all.filter(x=>safe(x.net)>0).length, netShort=all.length-netLong;
+  const top=largest[0];
+  summaryText.textContent=`Across ${all.length} tracked markets, ${netLong} are net long and ${netShort} are net short. ${top?`${top.asset} recorded the largest standardized weekly net-position shift (${safe(top.netChangeZ).toFixed(1)}z).`:''} Price changes require a separate market-data source.`;
+}
+function selectDate(d){
+  const report=payload.reports[d];
+  if(!report)return;
+  data={leveraged:report.leveraged||[],managed:report.managed||[]};
+  const url=new URL(location.href);url.searchParams.set('date',d);history.replaceState({},'',url);
+  render();
+}
+views.onclick=e=>{if(e.target.tagName!=='BUTTON')return;[...views.children].forEach(b=>b.classList.remove('active'));e.target.classList.add('active');const v=e.target.dataset.view;tables.classList.toggle('hidden',v==='analysis');analysis.classList.toggle('hidden',v!=='analysis');report.classList.toggle('hidden',v!=='report')};
+modes.onclick=e=>{if(e.target.tagName!=='BUTTON')return;[...modes.children].forEach(b=>b.classList.remove('active'));e.target.classList.add('active');professional=e.target.dataset.mode==='professional';render()};
+date.onchange=()=>selectDate(date.value);
+
+async function boot(){
+  try{
+    const response=await fetch('data/reports.json',{cache:'no-store'});
+    if(!response.ok)throw new Error(`HTTP ${response.status}`);
+    payload=await response.json();
+    const dates=Object.keys(payload.reports||{}).sort().reverse();
+    if(!dates.length)throw new Error('No reports found');
+    date.innerHTML=dates.map(d=>`<option value="${d}">${d}</option>`).join('');
+    const requested=new URLSearchParams(location.search).get('date');
+    date.value=dates.includes(requested)?requested:(payload.latestDate||dates[0]);
+    status.textContent=`Official CFTC data · updated ${new Date(payload.generatedAt).toLocaleDateString()}`;
+    selectDate(date.value);
+  }catch(err){
+    status.textContent='Data file unavailable — run the GitHub update workflow';
+    tables.innerHTML=`<section class="card report-summary"><h2>Data setup required</h2><p>Open GitHub Actions and run “Update CFTC data” once. Error: ${err.message}</p></section>`;
+  }
+}
+boot();
+</script></body></html>
